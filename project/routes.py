@@ -1,5 +1,5 @@
 from project import api, config
-from project.resources import AuthResource, RoleResource
+from project.resources import AuthResource, RoleResource, OrgResource
 
 api.add_resource(AuthResource.Registration, config.REGISTRATION_URL)
 api.add_resource(AuthResource.Login, config.LOGIN_URL)
@@ -8,3 +8,5 @@ api.add_resource(AuthResource.Logout, config.LOGOUT_URL)
 
 
 api.add_resource(RoleResource.CreateRole, config.ROLE_CREATE_URL)
+
+api.add_resource(OrgResource.CreateOrg, config.ORG_CREATE_URL)

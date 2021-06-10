@@ -26,9 +26,7 @@ class CreateRole(Resource):
             return {'message': 'Role Description /{}/ already exist'.format(data['role_description'])}, 400
 
         try:
-            print(get_jwt_identity()['_id'])
-
-            _id = mongo.db.users.insert({
+            _id = mongo.db.roles_collection.insert({
                 'role_name': data['role_name'],
                 'role_description': data['role_description'],
                 'created_by': ObjectId(get_jwt_identity()['_id']),
