@@ -18,14 +18,14 @@ class CreateOrg(Resource):
         data = org_arg.parse_args()
 
         try:
-            if mongo.db.roles_collection.find_one({'role_name': data['role_name']}) is not None:
-                return {'message': 'Roll Name /{}/ already exist'.format(data['role_name'])}, 400
-            elif mongo.db.users.find_one({'role_description': data['role_description']}) is not None:
-                return {'message': 'Role Description /{}/ already exist'.format(data['role_description'])}, 400
+            if mongo.db.orgs_collection.find_one({'org_name': data['org_name']}) is not None:
+                return {'message': 'Organisation Name /{}/ already exist'.format(data['org_name'])}, 400
+            elif mongo.db.users.find_one({'org_description': data['org_description']}) is not None:
+                return {'message': 'Organisation Description /{}/ already exist'.format(data['org_description'])}, 400
 
-            _id = mongo.db.roles_collection.insert({
+            _id = mongo.db.orgs_collection.insert({
                 'org_name': data['org_name'],
-                'role_description': data['role_description'],
+                'org_description': data['org_description'],
                 'created_by': ObjectId(get_jwt_identity()['_id']),
                 'created_at': datetime.utcnow()
             })
