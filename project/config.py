@@ -11,41 +11,23 @@ CHANGE_PASSWORD_URL = '/user/changepassword/<ObjectId:id>'
 
 # ROLES-MASTER-URL
 ROLES_URL = '/roles'
+ROLES_ACTIVE_URL = '/roles/active'
+ROLES_INACTIVE_URL = '/roles/inactive'
 ROLE_URL = '/role/<ObjectId:id>'
 ROLE_CREATE_URL = '/role/create'
 ROLE_AUTOCOMPLETE_URL = '/roles/autoComplete'
+ROLE_ACTIVE_AUTOCOMPLETE_URL = '/roles/autoComplete/active'
+ROLE_INACTIVE_AUTOCOMPLETE_URL = '/roles/autoComplete/inactive'
 ROLE_UPDATE_URL = '/role/update/<ObjectId:id>'
 ROLE_DELETE_URL = '/role/delete/<ObjectId:id>'
-ROLE_REMOVE_URL = '/role/remove/<ObjectId:id>'
-
-# USER-MASTER-URL
-USERS_URL = '/users'
-USER_URL = '/user/:id'
-USER_CREATE_URL = '/user/create'
-USER_UPDATE_URL = '/user/update'
-USER_DELETE_URL = '/user/delete'
-
-#ORGS-MASTER-URL
-ORGS_URL = '/orgs'
-ORG_URL = '/org/:id'
-ORG_CREATE_URL = '/org/create'
-ORG_UPDATE_URL = '/org/update'
-ORG_DELETE_URL = '/org/delete'
-
+ROLE_ACTIVATE_URL = '/role/activate/<ObjectId:id>'
 
 #PROCESSS-MASTER-URL
-PROCESSS_URL = '/processs'
-PROCESS_URL = '/process/:id'
-PROCESS_CREATE_URL = '/process/create'
-PROCESS_UPDATE_URL = '/process/update'
-PROCESS_DELETE_URL = '/process/delete'
-
-
-
-
-#CUSTOMER-MASTER-URL
-CUSTOMERS_URL = '/customers'
-CUSTOMER_URL = '/customer/<id>'
-CUSTOMER_CREATE_URL = '/customer/create'
-CUSTOMER_UPDATE_URL = '/customer/update'
-CUSTOMER_DELETE_URL = '/customer/delete'
+# PROCESSS_URL = '/processs'
+# PROCESS_URL = '/process/<ObjectId:id>'
+# PROCESS_CREATE_URL = '/process/create'
+# PROCESS_AUTOCOMPLETE_URL = '/processs/autoComplete'
+# PROCESS_UPDATE_URL = '/process/update/<ObjectId:id>'
+# PROCESS_DELETE_URL = '/process/delete/<ObjectId:id>'
+# PROCESS_ACTIVATE_URL = '/process/activate/<ObjectId:id>'
+# PROCESS_REMOVE_URL = '/process/remove/<ObjectId:id>'

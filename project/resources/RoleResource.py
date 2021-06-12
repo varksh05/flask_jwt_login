@@ -1,31 +1,28 @@
 from datetime import datetime
-
-from bson.json_util import ObjectId, dumps
-from flask import jsonify
-from flask_pymongo import PyMongo
 from flask_restful import Resource, reqparse
-from werkzeug.security import generate_password_hash, check_password_hash
-
-from project import mongo
+from flask_pymongo import DESCENDING, ASCENDING
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from bson.json_util import ObjectId
+from project import mongo
 
 role_arg = reqparse.RequestParser()
-role_arg.add_argument('role_name', help='This field cannot be blank', required=True)
+role_arg.add_argument( 'role_name', help='This field cannot be blank', required=True)
 role_arg.add_argument('role_description', help='This field cannot be blank', required=True)
 
 role_update = reqparse.RequestParser()
-role_arg.add_argument('role_name')
-role_arg.add_argument('role_description')
+role_update.add_argument('role_name')
+role_update.add_argument('role_description')
+
 
 class CreateRole(Resource):
 
-    @jwt_required()
+    # @jwt_required()
     def post(self):
         data = role_arg.parse_args()
 
         if mongo.db.roles_collection.find_one({'role_name': data['role_name']}) is not None:
             return {'message': 'Roll Name /{}/ already exist'.format(data['role_name'])}, 400
-        elif mongo.db.users.find_one({'role_description': data['role_description']}) is not None:
+        elif mongo.db.users_collection.find_one({'role_description': data['role_description']}) is not None:
             return {'message': 'Role Description /{}/ already exist'.format(data['role_description'])}, 400
 
         try:
@@ -50,13 +47,13 @@ class GetOneRole(Resource):
         try:
             current_user = get_jwt_identity()
             if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
-                role_data = mongo.db.roles_collection.find_one_or_404(id)
+                role_data = mongo.db.roles_collection.find_one_or_404({'_id': id, 'delete_status': False})
                 response_data = {
                     'role_name': role_data['role_name'],
                     'role_description': role_data['role_description']
                 }
                 return response_data, 200
-            return 'Restricted URL', 401
+            return 'Restricted URL', 405
 
         except ConnectionRefusedError:
             return 'Provide an Name, Username and Password in JSON in request body', 400
@@ -69,17 +66,110 @@ class GetRolesAutoCompleteList(Resource):
         try:
             current_user = get_jwt_identity()
             if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
-                roles_data = mongo.db.roles_collection.find()
+                roles_data = mongo.db.roles_collection.find().sort('role_name', ASCENDING)
                 response_data = []
+
+                # Formating thhe response data
                 for data in roles_data:
                     print(data)
                     response_data.append(data['role_name'])
                 return response_data, 200
-            return 'Restricted URL', 401
+            return 'Restricted URL', 405
+
+        except KeyError:
+            return 'There was a key error', 500
+
+
+class GetRolesAutoCompleteActiveList(Resource):
+
+    @jwt_required()
+    def get(self):
+        try:
+            current_user = get_jwt_identity()
+            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+                roles_data = mongo.db.roles_collection.find({'delete_status': False}).sort('role_name', ASCENDING)
+                response_data = []
+
+                # Formating thhe response data
+                for data in roles_data:
+                    print(data)
+                    response_data.append(data['role_name'])
+                return response_data, 200
+            return 'Restricted URL', 405
+
+        except KeyError:
+            return 'There was a key error', 500
+
+
+class GetRolesAutoCompleteInactiveList(Resource):
+
+    @jwt_required()
+    def get(self):
+        try:
+            current_user = get_jwt_identity()
+            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+                roles_data = mongo.db.roles_collection.find({'delete_status': True}).sort('role_name', ASCENDING)
+                response_data = []
+
+                # Formating thhe response data
+                for data in roles_data:
+                    print(data)
+                    response_data.append(data['role_name'])
+                return response_data, 200
+            return 'Restricted URL', 405
+
+        except KeyError:
+            return 'There was a key error', 500
+
+
+class GetAllActiveRole(Resource):
+
+    @jwt_required()
+    def get(self):
+        try:
+            current_user = get_jwt_identity()
+            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+                roles_data = mongo.db.roles_collection.find({'delete_status': False}).sort('role_name', ASCENDING)
+                response_data = []
+
+                # Formating thhe response data
+                for data in roles_data:
+                    response_data.append({
+                        '_id': str(data['_id']),
+                        'role_name': data['role_name'],
+                        'role_description': data['role_description'],
+                    })
+
+                return response_data, 200
+            return 'Restricted URL', 405
 
         except ConnectionRefusedError:
             return 'Provide an Name, Username and Password in JSON in request body', 400
 
+
+class GetAllInactiveRole(Resource):
+
+    @jwt_required()
+    def get(self):
+        try:
+            current_user = get_jwt_identity()
+            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+                roles_data = mongo.db.roles_collection.find({'delete_status': True}).sort('role_name', ASCENDING)
+                response_data = []
+
+                # Formating thhe response data
+                for data in roles_data:
+                    response_data.append({
+                        '_id': str(data['_id']),
+                        'role_name': data['role_name'],
+                        'role_description': data['role_description'],
+                    })
+
+                return response_data, 200
+            return 'Restricted URL', 405
+
+        except ConnectionRefusedError:
+            return 'Provide an Name, Username and Password in JSON in request body', 400
 
 
 class GetAllRole(Resource):
@@ -89,16 +179,19 @@ class GetAllRole(Resource):
         try:
             current_user = get_jwt_identity()
             if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
-                roles_data = mongo.db.roles_collection.find()
+                roles_data = mongo.db.roles_collection.find().sort('role_name', ASCENDING)
                 response_data = []
+
+                # Formating thhe response data
                 for data in roles_data:
-                    print(data)
                     response_data.append({
+                        '_id': str(data['_id']),
                         'role_name': data['role_name'],
-                        'role_description': data['role_description']
+                        'role_description': data['role_description'],
                     })
+
                 return response_data, 200
-            return 'Restricted URL', 401
+            return 'Restricted URL', 405
 
         except ConnectionRefusedError:
             return 'Provide an Name, Username and Password in JSON in request body', 400
@@ -112,12 +205,15 @@ class UpdateRole(Resource):
             req = role_update.parse_args()
             current_user = get_jwt_identity()
             if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+
+                # Check the updated Field
                 roles_data = mongo.db.roles_collection.find_one_or_404(id)
-                if req['role_id'] is not None:
-                    roles_data['role_id'] =  req['role_id']
+                if req['role_name'] is not None:
+                    roles_data['role_name'] = req['role_name']
                 if req['role_description'] is not None:
                     roles_data['role_description'] = req['role_description']
-                response_data = []
+
+                # Check the updated Field
                 mongo.db.roles_collection.update_one({
                     '_id': id
                 }, {
@@ -129,8 +225,8 @@ class UpdateRole(Resource):
                     }
                 })
 
-                return f'Deleted Successfully! Click to View /role/{id}', 200
-            return 'Restricted URL', 401
+                return f'Updated Successfully! Click to View /role/{id}', 200
+            return 'Restricted URL', 405
 
         except ConnectionRefusedError:
             return 'Provide an Name, Username and Password in JSON in request body', 400
@@ -143,40 +239,89 @@ class DeleteRole(Resource):
         try:
             current_user = get_jwt_identity()
             if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+
+                # Find the Role Data based on Role Value and if so the Delete Status is True
                 role_data = mongo.db.roles_collection.find_one(id)
-                if role_data is not None:
-                    mongo.db.roles_collection.update_one({
-                        '_id': id
-                    }, {
-                        '$set': {
-                            'delete_status': 1,
-                            'modified_by': current_user['_id'],
-                            'modified_at': datetime.utcnow()
-                        }
-                    })
-                    return f'Deleted Successfully! Click to View /roles', 200
-                return f'User {id} is not found', 404
-            return 'Restricted URL', 401
+                if role_data is None or role_data['delete_status'] is True:
+                    return f'Role {id} is not found', 404
+
+                # Check if the Role is used Anywhere
+                check_data_use = list(mongo.db.users_collection.find(
+                    {'role_id': ObjectId(str(id))}))
+                if len(check_data_use) > 0:
+                    return f'Data is in User {id}', 403
+
+                # Update the Delete status
+                mongo.db.roles_collection.update_one({'_id': id}, {
+                    '$set': {
+                        'delete_status': True,
+                        'modified_by': current_user['_id'],
+                        'modified_at': datetime.utcnow()
+                    }
+                })
+
+                return f'Deleted Successfully! Click to View /roles', 200
+            return 'Restricted URL', 405
 
         except ConnectionRefusedError:
             return 'Provide an Name, Username and Password in JSON in request body', 400
-
-
-class RemoveRole(Resource):
 
     @jwt_required()
     def delete(self, id):
         try:
             current_user = get_jwt_identity()
             if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+
+                # Find the Role Data based on Role Value
                 role_data = mongo.db.roles_collection.find_one(id)
-                if role_data is not None:
-                    mongo.db.roles_collection.delete_one({
-                        '_id': id
-                    })
-                    return f'Removed Successfully! Click to View /roles', 200
-                return f'User {id} is not found', 404
-            return 'Restricted URL', 401
+                if role_data is None:
+                    return f'Role {id} is not found', 404
+
+                # Check if the Role is used Anywhere
+                check_data_use = list(mongo.db.users_collection.find(
+                    {'role_id': ObjectId(str(id))}))
+                if len(check_data_use) > 0:
+                    return f'Data is in User {id}', 403
+
+                # Remove the Data from Collection Permanantely
+                mongo.db.roles_collection.delete_one({
+                    '_id': id
+                })
+                return f'Removed Successfully! Click to View /roles', 200
+            return 'Restricted URL', 405
+
+        except ConnectionRefusedError:
+            return 'Provide an Name, Username and Password in JSON in request body', 400
+
+
+class ActivateRole(Resource):
+
+    @jwt_required()
+    def put(self, id):
+        try:
+            current_user = get_jwt_identity()
+            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+                
+                # Find the Role Data based on Role Value
+                role_data = mongo.db.roles_collection.find_one(id)
+                if role_data is None:
+                    return f'Role {id} is not found', 404
+
+                # Check the Delete Status if its Deleted or Not
+                if role_data['delete_status'] is False:
+                    return f'Role {id} is already active', 200
+
+                # Update the Delete Status to True
+                mongo.db.roles_collection.update_one({'_id': id}, {
+                    '$set': {
+                        'delete_status': False,
+                        'modified_by': current_user['_id'],
+                        'modified_at': datetime.utcnow()
+                    }
+                })
+
+                return f'Activated Successfully! Click to View /roles', 200
+            return 'Restricted URL', 405
 
         except ConnectionRefusedError:
             return 'Provide an Name, Username and Password in JSON in request body', 400

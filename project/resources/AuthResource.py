@@ -16,7 +16,6 @@ register_arg.add_argument('dob')
 register_arg.add_argument('gender')
 register_arg.add_argument('email')
 register_arg.add_argument('phone')
-# register_arg.add_argument('org_id', help='This field cannot be blank', required=True)
 register_arg.add_argument('role_id', help='This field cannot be blank', required=True)
 register_arg.add_argument('password', help='This field cannot be blank', required=True)
 
@@ -71,25 +70,25 @@ class Login(Resource):
         password = data['password']
 
         try:
-            if mongo.db.users.find_one({'email': user_id}) is None and mongo.db.users.find_one({'username': user_id}) is None and mongo.db.users.find_one({'phone': user_id}) is None:
+            if mongo.db.users_collection.find_one({'email': user_id}) is None and mongo.db.users_collection.find_one({'username': user_id}) is None and mongo.db.users_collection.find_one({'phone': user_id}) is None:
                 return {'message': f'User {user_id} does not exist'}, 404
 
-            if mongo.db.users.find_one({'email': user_id}) is not None:
-                _user = mongo.db.users.find_one({'email': user_id})
-            elif mongo.db.users.find_one({'username': user_id}) is not None:
-                _user = mongo.db.users.find_one({'username': user_id})
-            elif mongo.db.users.find_one({'phone': user_id}) is not None:
-                _user = mongo.db.users.find_one({'phone': user_id})
+            if mongo.db.users_collection.find_one({'email': user_id}) is not None:
+                _user = mongo.db.users_collection.find_one({'email': user_id})
+            elif mongo.db.users_collection.find_one({'username': user_id}) is not None:
+                _user = mongo.db.users_collection.find_one({'username': user_id})
+            elif mongo.db.users_collection.find_one({'phone': user_id}) is not None:
+                _user = mongo.db.users_collection.find_one({'phone': user_id})
 
             if check_password_hash(pwhash=_user["password"], password=password):
-                access_token = create_access_token(identity={
-                    '_id': str(_user["_id"]),
-                    'role_id': str(_user["role_id"])
-                })
-                refresh_token = create_refresh_token(identity={
-                    '_id': str(_user["_id"]),
-                    'role_id': str(_user["role_id"])
-                })
+                access_token = create_access_token(
+                    identity={'_id': str(_user["_id"]), 'role_id': str(_user["role_id"])},
+                    expires_delta=False
+                )
+                refresh_token = create_refresh_token(
+                    identity={'_id': str(_user["_id"]), 'role_id': str(_user["role_id"])},
+                    expires_delta=False
+                )
                 return {
                     '_id': str(_user["_id"]),
                     'access_token': access_token,
@@ -97,7 +96,7 @@ class Login(Resource):
                 }, 200
 
             else:
-                return {'message': f'Incorrect Password'}, 404
+                return f'Incorrect Password', 404
 
         except AttributeError:
             return 'Provide an Name, Username and Password in JSON in request body', 400
@@ -111,37 +110,30 @@ class ChangePassword(Resource):
         identity = get_jwt_identity()
         old_password = data['old_password']
         new_password = data['new_password']
+        _user = {}
 
         print(identity)
 
         try:
-            if mongo.db.users.find_one({'_id': ObjectId(id)}) is None:
-                return {'message': 'User id does not exist'}
-            if identity["_id"] != id:
-                _username = mongo.db.users.find_one({'_id':  ObjectId(id)})["username"]
-                return {'message': f'User does not have authority to change password for {_username}'}
-
-            _user = mongo.db.users.find_one({'_id':  ObjectId(identity["_id"])})
-
-            if check_password_hash(pwhash=_user["password"], password=old_password):
-                mongo.db.users.update_one({
-                    '_id': ObjectId(_user['_id'])
-                }, {
-                    '$set': {
-                        'password': generate_password_hash(new_password),
-                    }
-                })
-
-                return 'Changed Password succsess', 200
-
-            else:
-                return {'message': f'Incorrect Old Password'}, 404
+            if mongo.db.users_collection.find_one({'_id': id}) is None:
+                return 'User id does not exist', 404
+            if identity['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4'] and identity['role_id'] is str(id):
+               
+                _user = mongo.db.users_collection.find_one({'_id':  ObjectId(identity["_id"])})
+                # Validating the old password to update the new password    
+                if check_password_hash(pwhash=_user["password"], password=old_password):
+                    mongo.db.users_collection.update_one({
+                        '_id': ObjectId(_user['_id'])
+                    }, {
+                        '$set': {
+                            'password': generate_password_hash(new_password),
+                        }
+                    })
+                    return 'Changed Password Successfully', 200
+                # Works when the old Password is Incorrect    
+                return f'Incorrect Old Password', 401
+            return f'User does not have authority to change password for {_user["username"]}', 401
 
         except AttributeError:
             return 'Provide an Name, Username and Password in JSON in request body', 400
 
-
-class Logout(Resource):
-    @jwt_required()
-    def get(self):
-        return 'Logging out', 400
