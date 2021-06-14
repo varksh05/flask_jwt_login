@@ -5,7 +5,6 @@ from project.resources import AuthResource, RoleResource, ProcessResource
 api.add_resource(AuthResource.Registration, config.REGISTRATION_URL)
 api.add_resource(AuthResource.Login, config.LOGIN_URL)
 api.add_resource(AuthResource.ChangePassword, config.CHANGE_PASSWORD_URL)
-api.add_resource(AuthResource.Logout, config.LOGOUT_URL)
 
 # Roles Resources
 api.add_resource(RoleResource.CreateRole, config.ROLE_CREATE_URL)
@@ -20,10 +19,10 @@ api.add_resource(RoleResource.UpdateRole, config.ROLE_UPDATE_URL)
 api.add_resource(RoleResource.DeleteRole, config.ROLE_DELETE_URL)
 api.add_resource(RoleResource.ActivateRole, config.ROLE_ACTIVATE_URL)
 
-# Processs Resources
-# api.add_resource(ProcessResource.CreateProcess, config.PROCESS_CREATE_URL)
-# api.add_resource(ProcessResource.GetOneProcess, config.PROCESS_URL)
-# api.add_resource(ProcessResource.GetAllProcess, config.PROCESSS_URL)
+# Processes Resources
+api.add_resource(ProcessResource.CreateProcess, config.PROCESS_CREATE_URL)
+api.add_resource(ProcessResource.GetOneProcess, config.PROCESS_URL)
+api.add_resource(ProcessResource.GetAllProcesses, config.PROCESSES_URL)
 # api.add_resource(ProcessResource.GetProcesssAutoCompleteList, config.PROCESS_AUTOCOMPLETE_URL)
 # api.add_resource(ProcessResource.UpdateProcess, config.PROCESS_UPDATE_URL)
 # api.add_resource(ProcessResource.DeleteProcess, config.PROCESS_DELETE_URL)

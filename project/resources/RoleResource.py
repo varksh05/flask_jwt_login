@@ -6,7 +6,7 @@ from bson.json_util import ObjectId
 from project import mongo
 
 role_arg = reqparse.RequestParser()
-role_arg.add_argument( 'role_name', help='This field cannot be blank', required=True)
+role_arg.add_argument('role_name', help='This field cannot be blank', required=True)
 role_arg.add_argument('role_description', help='This field cannot be blank', required=True)
 
 role_update = reqparse.RequestParser()
@@ -16,25 +16,36 @@ role_update.add_argument('role_description')
 
 class CreateRole(Resource):
 
-    # @jwt_required()
+    @jwt_required()
     def post(self):
-        data = role_arg.parse_args()
-
-        if mongo.db.roles_collection.find_one({'role_name': data['role_name']}) is not None:
-            return {'message': 'Roll Name /{}/ already exist'.format(data['role_name'])}, 400
-        elif mongo.db.users_collection.find_one({'role_description': data['role_description']}) is not None:
-            return {'message': 'Role Description /{}/ already exist'.format(data['role_description'])}, 400
-
         try:
-            _id = mongo.db.roles_collection.insert({
-                'role_name': data['role_name'],
-                'role_description': data['role_description'],
-                'created_by': ObjectId(get_jwt_identity()['_id']),
-                'delete_status': 0,
-                'created_at': datetime.utcnow()
-            })
+            current_user = get_jwt_identity()
 
-            return f'{data["role_name"]} is created', 200
+            # Check the permission for the role with the current id
+            createRolePermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e638c19d73a3e81bb76e')}
+            )['permission_role_id']
+
+            if current_user['role_id'] in createRolePermission:
+                data = role_arg.parse_args()
+
+                if mongo.db.roles_collection.find_one({'role_name': data['role_name']}) is not None:
+                    return {'message': 'Role Name /{}/ already exist'.format(data['role_name'])}, 400
+                elif mongo.db.users_collection.find_one({'role_description': data['role_description']}) is not None:
+                    return {'message': 'Role Description /{}/ already exist'.format(data['role_description'])}, 400
+
+                _id = mongo.db.roles_collection.insert({
+                    'role_name': data['role_name'],
+                    'role_description': data['role_description'],
+                    'created_by': ObjectId(get_jwt_identity()['_id']),
+                    'created_at': datetime.utcnow(),
+                    'delete_status': False
+                })
+
+                print(_id)
+
+                return f'{data["role_name"]} {_id} is created', 200
+            return 'Restricted URL', 405
 
         except AttributeError:
             return 'Provide an Name, Username and Password in JSON in request body', 400
@@ -46,7 +57,13 @@ class GetOneRole(Resource):
     def get(self, id):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+
+            # Check the permission for the role with the current id
+            getOneRoleDetailsPermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e68cc19d73a3e81bb76f')}
+            )['permission_role_id']
+
+            if current_user['role_id'] in getOneRoleDetailsPermission:
                 role_data = mongo.db.roles_collection.find_one_or_404({'_id': id, 'delete_status': False})
                 response_data = {
                     'role_name': role_data['role_name'],
@@ -65,7 +82,14 @@ class GetRolesAutoCompleteList(Resource):
     def get(self):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+
+            # Check the permission for the role with the current id
+            getRoleAutoCompleteListPermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e6eec19d73a3e81bb770')}
+            )['permission_role_id']
+
+            
+            if current_user['role_id'] in getRoleAutoCompleteListPermission:
                 roles_data = mongo.db.roles_collection.find().sort('role_name', ASCENDING)
                 response_data = []
 
@@ -86,7 +110,13 @@ class GetRolesAutoCompleteActiveList(Resource):
     def get(self):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+            
+            # Check the permission for the role with the current id
+            getRoleAutoCompleteListPermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e6eec19d73a3e81bb770')}
+            )['permission_role_id']
+            
+            if current_user['role_id'] in getRoleAutoCompleteListPermission:
                 roles_data = mongo.db.roles_collection.find({'delete_status': False}).sort('role_name', ASCENDING)
                 response_data = []
 
@@ -107,7 +137,13 @@ class GetRolesAutoCompleteInactiveList(Resource):
     def get(self):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+            
+            # Check the permission for the role with the current id
+            getRoleAutoCompleteListPermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e6eec19d73a3e81bb770')}
+            )['permission_role_id']
+            
+            if current_user['role_id'] in getRoleAutoCompleteListPermission:
                 roles_data = mongo.db.roles_collection.find({'delete_status': True}).sort('role_name', ASCENDING)
                 response_data = []
 
@@ -128,7 +164,13 @@ class GetAllActiveRole(Resource):
     def get(self):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+            
+            # Check the permission for the role with the current id
+            getAllRoleListPermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e71ceb2606d92ef862fd')}
+            )['permission_role_id']
+            
+            if current_user['role_id'] in getAllRoleListPermission:
                 roles_data = mongo.db.roles_collection.find({'delete_status': False}).sort('role_name', ASCENDING)
                 response_data = []
 
@@ -153,7 +195,13 @@ class GetAllInactiveRole(Resource):
     def get(self):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+            
+            # Check the permission for the role with the current id
+            getAllRoleListPermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e71ceb2606d92ef862fd')}
+            )['permission_role_id']
+            
+            if current_user['role_id'] in getAllRoleListPermission:
                 roles_data = mongo.db.roles_collection.find({'delete_status': True}).sort('role_name', ASCENDING)
                 response_data = []
 
@@ -178,7 +226,13 @@ class GetAllRole(Resource):
     def get(self):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+            
+            # Check the permission for the role with the current id
+            getAllRoleListPermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e71ceb2606d92ef862fd')}
+            )['permission_role_id']
+            
+            if current_user['role_id'] in getAllRoleListPermission:
                 roles_data = mongo.db.roles_collection.find().sort('role_name', ASCENDING)
                 response_data = []
 
@@ -204,7 +258,13 @@ class UpdateRole(Resource):
         try:
             req = role_update.parse_args()
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+            
+            # Check the permission for the role with the current id
+            updateRolePermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e758d2fc6ecdacdf9af4')}
+            )['permission_role_id']
+            
+            if current_user['role_id'] in updateRolePermission:
 
                 # Check the updated Field
                 roles_data = mongo.db.roles_collection.find_one_or_404(id)
@@ -238,7 +298,13 @@ class DeleteRole(Resource):
     def put(self, id):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+            
+            # Check the permission for the role with the current id
+            deleteRolePermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e77f329d5df4fc756789')}
+            )['permission_role_id']
+            
+            if current_user['role_id'] in deleteRolePermission:
 
                 # Find the Role Data based on Role Value and if so the Delete Status is True
                 role_data = mongo.db.roles_collection.find_one(id)
@@ -270,6 +336,12 @@ class DeleteRole(Resource):
     def delete(self, id):
         try:
             current_user = get_jwt_identity()
+            
+            # Check the permission for the role with the current id
+            removeRolePermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e78a329d5df4fc75678a')}
+            )['permission_role_id']
+            
             if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
 
                 # Find the Role Data based on Role Value
@@ -300,7 +372,12 @@ class ActivateRole(Resource):
     def put(self, id):
         try:
             current_user = get_jwt_identity()
-            if current_user['role_id'] in ['60c2663e00a526d1f07465b3', '60c2666c00a526d1f07465b4']:
+
+            activateRolePermission = mongo.db.process_collection.find_one(
+                {'_id': ObjectId('60c6e797329d5df4fc75678b')}
+            )['permission_role_id']
+            
+            if current_user['role_id'] in activateRolePermission:
                 
                 # Find the Role Data based on Role Value
                 role_data = mongo.db.roles_collection.find_one(id)

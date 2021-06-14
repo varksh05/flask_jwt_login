@@ -23,9 +23,9 @@ ROLE_DELETE_URL = '/role/delete/<ObjectId:id>'
 ROLE_ACTIVATE_URL = '/role/activate/<ObjectId:id>'
 
 #PROCESSS-MASTER-URL
-# PROCESSS_URL = '/processs'
-# PROCESS_URL = '/process/<ObjectId:id>'
-# PROCESS_CREATE_URL = '/process/create'
+PROCESSES_URL = '/processes'
+PROCESS_URL = '/process/<ObjectId:id>'
+PROCESS_CREATE_URL = '/process/create'
 # PROCESS_AUTOCOMPLETE_URL = '/processs/autoComplete'
 # PROCESS_UPDATE_URL = '/process/update/<ObjectId:id>'
 # PROCESS_DELETE_URL = '/process/delete/<ObjectId:id>'
